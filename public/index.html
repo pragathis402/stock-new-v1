@@ -1905,6 +1905,70 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
   }
 });
+
+async function showRegister() {
+  const pwd = prompt('Enter new password for new user:');
+  if (!pwd) return;
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    showToast('✅ New user created successfully');
+  } catch(e) {
+    alert(e.message);
+  }
+}
+
+async function showForgot() {
+  const pwd = prompt('Enter new password:');
+  if (!pwd) return;
+  try {
+    const res = await fetch('/api/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newPassword: pwd })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    showToast('✅ Password reset successful');
+  } catch(e) {
+    alert(e.message);
+  }
+}
+
+// Improved delete handling
+const originalDeleteProduct = deleteProduct;
+deleteProduct = async function(id) {
+  if (!confirm('Delete this product permanently?')) return;
+  try {
+    const response = await api('DELETE', '/products/' + id);
+    store.products = store.products.filter(p => p.uid !== id);
+    refreshAll();
+    showToast('🗑️ Product deleted successfully');
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Delete failed: ' + e.message);
+  }
+};
+
+const originalDeleteUser = window.deleteUser;
+window.deleteUser = async function(id) {
+  if (!confirm('Delete this customer permanently?')) return;
+  try {
+    await api('DELETE', '/customers/' + id);
+    store.users = store.users.filter(u => u.uid !== id);
+    refreshAll();
+    showToast('🗑️ Customer deleted successfully');
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Delete failed: ' + e.message);
+  }
+};
+
 </script>
 </body>
 </html>
